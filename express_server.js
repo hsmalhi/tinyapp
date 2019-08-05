@@ -37,8 +37,13 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL/edit", (req, res) => {
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
-  res.render("urls_show", templateVars);
+  if (urlDatabase[req.params.shortURL]) {
+    let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+    res.render("urls_show", templateVars);
+  } else {
+    res.statusCode = 404;
+    res.render("404");
+  }
 });
 
 app.get("/urls/:shortURL", (req, res) => {
@@ -47,7 +52,7 @@ app.get("/urls/:shortURL", (req, res) => {
     res.render("urls_show", templateVars);
   } else {
     res.statusCode = 404;
-    res.send("<html><body><h1>404 Does Not Exist</h1><h3>This Tiny URL does not exists</h3></body></html>");
+    res.render("404");
   }
 });
 
@@ -57,7 +62,7 @@ app.get("/u/:shortURL", (req, res) => {
     res.redirect(longURL);
   } else {
     res.statusCode = 404;
-    res.send("<html><body><h1>404 Does Not Exist</h1><h3>This Tiny URL does not exists</h3></body></html>");
+    res.render("404");
   }
 });
 
@@ -74,7 +79,6 @@ app.post("/urls/:shortURL", (req, res) => {
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  // console.log(req.body);  // Log the POST request body to the console
   delete urlDatabase[req.params.shortURL];
   res.redirect(`/urls`);
 });
