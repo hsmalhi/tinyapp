@@ -43,14 +43,14 @@ const generateRandomString = function() {
   return str;
 }
 
-//Returns true if a user with this email already exists
-const emailExists = function(email) {
+//Returns the user object if a user with that email exists
+const getUserByEmail = function(email) {
   for(const user in users) {
     if (users[user].email === email) {
-      return true;
+      return users[user];
     }
   }
-  return false;
+  return null;
 }
 
 /****************************************GET METHODS****************************************/
@@ -118,8 +118,15 @@ app.get("/u/:shortURL", (req, res) => {
 
 //Logs a user in, sets their username cookie and refreshes the page
 app.post("/login", (req, res) => {
-  //res.cookie("user_id", req.body.email);
-  res.redirect(`/urls`);
+  let user = getUserByEmail(req.body.email);
+  if (user && user.password === req.body.password){
+    res.cookie("user_id", user.id);
+    res.redirect(`/urls`);
+  }
+  else {
+    res.statusCode = 403;
+    res.send('Your email and password did not match anything in our records.')
+  }
 });
 
 //Logs a user out, deletes their username cookie and refreshes the page
@@ -134,7 +141,7 @@ app.post("/register", (req, res) => {
     res.statusCode = 400;
     res.send('Expected input fields were empty');
   }
-  else if (emailExists(req.body.email)){
+  else if (getUserByEmail(req.body.email)){
     res.statusCode = 400;
     res.send('This email is already registered!');
   }
