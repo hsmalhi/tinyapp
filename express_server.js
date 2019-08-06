@@ -1,6 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const cookieParser = require('cookie-parser')
+const cookieParser = require('cookie-parser');
 
 //Set up express app and required middleware
 const app = express();
@@ -17,18 +17,18 @@ const urlDatabase = {
 };
 
 //Object containing user information for registered users
-const users = { 
+const users = {
   "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
+    id: "userRandomID",
+    email: "user@example.com",
     password: "password1"
   },
- "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
     password: "password2"
   }
-}
+};
 
 /**************************************HELPER FUNCTIONS**************************************/
 
@@ -41,17 +41,17 @@ const generateRandomString = function() {
     str += chars[Math.round((Math.random() * 1000000) % chars.length)];
   }
   return str;
-}
+};
 
 //Returns the user object if a user with that email exists
 const getUserByEmail = function(email) {
-  for(const user in users) {
+  for (const user in users) {
     if (users[user].email === email) {
       return users[user];
     }
   }
   return null;
-}
+};
 
 /****************************************GET METHODS****************************************/
 
@@ -60,7 +60,7 @@ app.get("/", (req, res) => {
   //TO DO
   //If user is logged in, redirect to /urls
   //Else redirect to /login
-  res.redirect("/urls");
+  res.redirect(`/urls`);
 });
 
 //Renders the registration page
@@ -88,8 +88,12 @@ app.get("/urls.json", (req, res) => {
 
 //Renders the page for creating a new short URL
 app.get("/urls/new", (req, res) => {
-  let templateVars = { user: users[req.cookies["user_id"]] };
-  res.render("urls_new", templateVars);
+  if (!(req.cookies["user_id"])) {
+    res.redirect(`/login`);
+  } else {
+    let templateVars = { user: users[req.cookies["user_id"]] };
+    res.render("urls_new", templateVars);
+  }
 });
 
 //Renders a page with the information about the short URL if it exists and the option to edit the associated long URL
@@ -119,13 +123,12 @@ app.get("/u/:shortURL", (req, res) => {
 //Logs a user in, sets their user_id cookie and refreshes the page
 app.post("/login", (req, res) => {
   let user = getUserByEmail(req.body.email);
-  if (user && user.password === req.body.password){
+  if (user && user.password === req.body.password) {
     res.cookie("user_id", user.id);
     res.redirect(`/urls`);
-  }
-  else {
+  } else {
     res.statusCode = 403;
-    res.send('Your email and password did not match anything in our records.')
+    res.send('Your email and password did not match anything in our records.');
   }
 });
 
@@ -140,12 +143,10 @@ app.post("/register", (req, res) => {
   if (req.body.email === "" || req.body.password === "") {
     res.statusCode = 400;
     res.send('Expected input fields were empty');
-  }
-  else if (getUserByEmail(req.body.email)){
+  } else if (getUserByEmail(req.body.email)) {
     res.statusCode = 400;
     res.send('This email is already registered!');
-  }
-  else {
+  } else {
     let randomString = generateRandomString();
     users[randomString] = { id: randomString, email: req.body.email, password: req.body.password };
     res.cookie("user_id", randomString);
