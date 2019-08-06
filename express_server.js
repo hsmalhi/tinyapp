@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcrypt');
 
 //Set up express app and required middleware
 const app = express();
@@ -109,7 +110,7 @@ app.get("/urls/new", (req, res) => {
   }
 });
 
-//Renders a page with the information about the short URL if it exists and the option to edit the associated long URL
+//Renders a page with the information about the short URL if it exists and the option to edit the associated long URL. The page is only rendered if that short URL was created by the currently logged in user.
 app.get("/urls/:shortURL", (req, res) => {
   if (urlDatabase[req.params.shortURL]) {
     let templateVars = { user: users[req.cookies["user_id"]], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL };
@@ -136,7 +137,7 @@ app.get("/u/:shortURL", (req, res) => {
 //Logs a user in, sets their user_id cookie and refreshes the page
 app.post("/login", (req, res) => {
   let user = getUserByEmail(req.body.email);
-  if (user && user.password === req.body.password) {
+  if (user && bcrypt.compareSync(req.body.password, user.password)) {
     res.cookie("user_id", user.id);
     res.redirect(`/urls`);
   } else {
@@ -160,9 +161,11 @@ app.post("/register", (req, res) => {
     res.statusCode = 400;
     res.send('This email is already registered!');
   } else {
-    let randomString = generateRandomString();
-    users[randomString] = { id: randomString, email: req.body.email, password: req.body.password };
-    res.cookie("user_id", randomString);
+    const id = generateRandomString();
+    const email = req.body.email;
+    const password = bcrypt.hashSync(req.body.password, 10);
+    users[id] = { id, email, password };
+    res.cookie("user_id", id);
     res.redirect(`/urls`);
   }
 });
