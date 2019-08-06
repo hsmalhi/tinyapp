@@ -176,14 +176,24 @@ app.post("/urls", (req, res) => {
 
 //Edits the long url associated with a short url and then redirects to the homepage
 app.post("/urls/:shortURL", (req, res) => {
-  urlDatabase[req.params.shortURL].longURL = req.body.newURL;
-  res.redirect(`/urls`);
+  if (req.cookies["user_id"] && users[req.cookies["user_id"]]) {
+    urlDatabase[req.params.shortURL].longURL = req.body.newURL;
+    res.redirect(`/urls`);
+  } else {
+    res.statusCode = 401;
+    res.send("Unauthorized")
+  }
 });
 
 //Deletes the short url specified in the URL parameters
 app.post("/urls/:shortURL/delete", (req, res) => {
-  delete urlDatabase[req.params.shortURL];
-  res.redirect(`/urls`);
+  if (req.cookies["user_id"] && users[req.cookies["user_id"]]) {
+    delete urlDatabase[req.params.shortURL];
+    res.redirect(`/urls`);
+  } else {
+    res.statusCode = 401;
+    res.send("Unauthorized")
+  }
 });
 
 //Express server begins to listen on the specified PORT
