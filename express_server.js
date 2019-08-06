@@ -55,7 +55,7 @@ const getUserByEmail = function(email) {
 
 /****************************************GET METHODS****************************************/
 
-//Redirects the user if they access the root resource based on their login status ("username" cookie present or not)
+//Redirects the user if they access the root resource based on their login status ("user_id" cookie present or not)
 app.get("/", (req, res) => {
   //TO DO
   //If user is logged in, redirect to /urls
@@ -116,7 +116,7 @@ app.get("/u/:shortURL", (req, res) => {
 
 /****************************************POST METHODS****************************************/
 
-//Logs a user in, sets their username cookie and refreshes the page
+//Logs a user in, sets their user_id cookie and refreshes the page
 app.post("/login", (req, res) => {
   let user = getUserByEmail(req.body.email);
   if (user && user.password === req.body.password){
@@ -129,7 +129,7 @@ app.post("/login", (req, res) => {
   }
 });
 
-//Logs a user out, deletes their username cookie and refreshes the page
+//Logs a user out, deletes their user_id cookie and refreshes the page
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
   res.redirect(`back`);
