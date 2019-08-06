@@ -11,9 +11,15 @@
 <body>
   <% include partials/_header.ejs %>
   <main style="margin: 1em;">
-    <h3>Registration</h3>
-    <form class="form-inline">
-
+    <h3>Create Account</h3>
+    <form class="form" method="POST" action="/register">
+      <div class="form-group mb-2">
+          <label for="email">Email Address</label>
+          <input class="form-control" type="email" name="email" placeholder="Enter email" style="width: 300px; margin-bottom: 1em" required>
+          <label for="password">Password</label>
+          <input class="form-control" type="password" name="password" placeholder="Enter password" style="width: 300px; margin-bottom: 1em" required>
+          <button type="submit" class="btn btn-primary">Register</button>
+      </div>
     </form>
   </main>
   <!-- Bootstrap JS -->

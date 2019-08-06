@@ -10,11 +10,27 @@ const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs");
 
-//Database containing short URL, long URL key value pairs.
+//Object containing short URL, long URL pairs
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+
+//Object containing user information for registered users
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "password1"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "password2"
+  }
+}
+
+/**************************************HELPER FUNCTIONS**************************************/
 
 //Returns a random 6 character alphanumeric string
 const generateRandomString = function() {
@@ -25,6 +41,16 @@ const generateRandomString = function() {
     str += chars[Math.round((Math.random() * 1000000) % chars.length)];
   }
   return str;
+}
+
+//Returns true if a user with this email already exists
+const emailExists = function(email) {
+  for(const user in users) {
+    if (users[user].email === email) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /****************************************GET METHODS****************************************/
@@ -39,13 +65,19 @@ app.get("/", (req, res) => {
 
 //Renders the registration page
 app.get("/register", (req, res) => {
-  let templateVars = { username: req.cookies["username"] };
+  let templateVars = { user: users[req.cookies["user_id"]] };
   res.render("register", templateVars);
+});
+
+//Renders the login page
+app.get("/login", (req, res) => {
+  let templateVars = { user: users[req.cookies["user_id"]] };
+  res.render("login", templateVars);
 });
 
 //Renders the homepage which displays the user's short urls, long urls and an edit and delete button for each
 app.get("/urls", (req, res) => {
-  let templateVars = { username: req.cookies["username"], urls: urlDatabase };
+  let templateVars = { user: users[req.cookies["user_id"]], urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
@@ -56,14 +88,14 @@ app.get("/urls.json", (req, res) => {
 
 //Renders the page for creating a new short URL
 app.get("/urls/new", (req, res) => {
-  let templateVars = { username: req.cookies["username"] };
+  let templateVars = { user: users[req.cookies["user_id"]] };
   res.render("urls_new", templateVars);
 });
 
 //Renders a page with the information about the short URL if it exists and the option to edit the associated long URL
 app.get("/urls/:shortURL", (req, res) => {
   if (urlDatabase[req.params.shortURL]) {
-    let templateVars = { username: req.cookies["username"], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+    let templateVars = { user: users[req.cookies["user_id"]], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
     res.render("urls_show", templateVars);
   } else {
     res.statusCode = 404;
@@ -86,14 +118,32 @@ app.get("/u/:shortURL", (req, res) => {
 
 //Logs a user in, sets their username cookie and refreshes the page
 app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
-  res.redirect(`back`);
+  //res.cookie("user_id", req.body.email);
+  res.redirect(`/urls`);
 });
 
 //Logs a user out, deletes their username cookie and refreshes the page
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id");
   res.redirect(`back`);
+});
+
+//Adds a new user to the list of users with the information they inputted on the register page. If the user already exists, send a 400 status with a message. This also checks if the email or password fields were inputted blank, but that should never be the case as the input fields are defined as required.
+app.post("/register", (req, res) => {
+  if (req.body.email === "" || req.body.password === "") {
+    res.statusCode = 400;
+    res.send('Expected input fields were empty');
+  }
+  else if (emailExists(req.body.email)){
+    res.statusCode = 400;
+    res.send('This email is already registered!');
+  }
+  else {
+    let randomString = generateRandomString();
+    users[randomString] = { id: randomString, email: req.body.email, password: req.body.password };
+    res.cookie("user_id", randomString);
+    res.redirect(`/urls`);
+  }
 });
 
 //Adds a new short URL and long URL pair to the url database
