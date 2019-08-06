@@ -24,6 +24,12 @@ const generateRandomString = function() {
   return str;
 }
 
+app.get("/", (req, res) => {
+  //If user is logged in, redirect to /urls
+  //Else redirect to /login
+  res.redirect("/urls");
+});
+
 app.get("/urls", (req, res) => {
   let templateVars = { username: req.cookies["username"], urls: urlDatabase };
   res.render("urls_index", templateVars);
