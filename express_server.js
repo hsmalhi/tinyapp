@@ -38,7 +38,8 @@ const generateRandomString = function() {
   chars += chars.toLowerCase() + "1234567890";
   let str = "";
   for (let i = 1; i <= 6; i++) {
-    str += chars[Math.round((Math.random() * 10000000) % chars.length)];
+    str += chars.charAt(Math.floor(Math.random() * chars.length));
+    // str += chars[Math.round((Math.random() * 10000000) % chars.length)];
   }
   return str;
 };
