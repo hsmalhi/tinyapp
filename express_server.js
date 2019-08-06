@@ -38,7 +38,7 @@ const generateRandomString = function() {
   chars += chars.toLowerCase() + "1234567890";
   let str = "";
   for (let i = 1; i <= 6; i++) {
-    str += chars[Math.round((Math.random() * 1000000) % chars.length)];
+    str += chars[Math.round((Math.random() * 10000000) % chars.length)];
   }
   return str;
 };
@@ -51,6 +51,17 @@ const getUserByEmail = function(email) {
     }
   }
   return null;
+};
+
+//Filters the urlDatabase object and returns only the entries for the specified userID
+const urlsForUser = function(userID) {
+  let filtered = {};
+  for (const url in urlDatabase) {
+    if (urlDatabase[url].userID === userID) {
+      filtered[url] = urlDatabase[url].longURL;
+    }
+  }
+  return filtered;
 };
 
 /****************************************GET METHODS****************************************/
@@ -77,7 +88,8 @@ app.get("/login", (req, res) => {
 
 //Renders the homepage which displays the user's short urls, long urls and an edit and delete button for each
 app.get("/urls", (req, res) => {
-  let templateVars = { user: users[req.cookies["user_id"]], urls: urlDatabase };
+  const userUrls = urlsForUser(req.cookies["user_id"]);
+  let templateVars = { user: users[req.cookies["user_id"]], urls: userUrls };
   res.render("urls_index", templateVars);
 });
 
@@ -88,7 +100,7 @@ app.get("/urls.json", (req, res) => {
 
 //Renders the page for creating a new short URL
 app.get("/urls/new", (req, res) => {
-  if (!(req.cookies["user_id"])) {
+  if (!(users[req.cookies["user_id"]])) {
     res.redirect(`/login`);
   } else {
     let templateVars = { user: users[req.cookies["user_id"]] };
