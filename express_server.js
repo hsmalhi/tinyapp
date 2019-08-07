@@ -1,8 +1,8 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const cookieSession = require('cookie-session')
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
-const { getUserByEmail, generateRandomString, urlsForUser } = require('./helpers')
+const { getUserByEmail, generateRandomString, urlsForUser } = require('./helpers');
 
 //Set up express app and required middleware
 const app = express();
@@ -13,15 +13,14 @@ app.use(cookieSession({
 
   // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
-}))
+}));
 const PORT = 8080; // default port 8080
-
 app.set("view engine", "ejs");
 
 //Object containing short URL, long URL pairs
 const urlDatabase = {
   //Empty at start of application
-  /* 
+  /*
   Example object:
   "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "userRandomID"}
   */
@@ -46,8 +45,7 @@ const users = {
 app.get("/", (req, res) => {
   if (users[req.session.user_id]) {
     res.redirect(`/urls`);
-  }
-  else {
+  } else {
     res.redirect(`/login`);
   }
 });
@@ -99,7 +97,10 @@ app.get("/urls/new", (req, res) => {
   }
 });
 
-//Renders a page with the information about the short URL if it exists and the option to edit the associated long URL. The page is only rendered if that short URL was created by the currently logged in user.
+//Renders a page with the information about the short URL if it exists and the option to edit the associated long URL.
+//The page is only rendered if that short URL was created by the currently logged in user.
+//If the user is not logged in or the short URL is not owned by the current user, display a 401 page
+//If the short URL does not exist at all, display a 404 page
 app.get("/urls/:shortURL", (req, res) => {
   if (urlDatabase[req.params.shortURL]) {
     if (urlDatabase[req.params.shortURL].userID === req.session.user_id) {
@@ -149,7 +150,7 @@ app.post("/logout", (req, res) => {
   res.redirect(`/`);
 });
 
-//Adds a new user to the list of users with the information they inputted on the register page. If the user already exists, send a 400 status with a message. This also checks if the email or password fields were inputted blank, but that should never be the case as the input fields are defined as required.
+//Adds a new user to the list of users with the information they inputted on the register page. If the user already exists send a 401 status with a message. This also checks if the email or password fields were inputted blank, but that should never be the case as the input fields are defined as required.
 app.post("/register", (req, res) => {
   if (req.body.email === "" || req.body.password === "") {
     res.statusCode = 401;
