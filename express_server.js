@@ -163,7 +163,7 @@ app.post("/register", (req, res) => {
     const email = req.body.email;
     const password = bcrypt.hashSync(req.body.password, 10);
     users[id] = { id, email, password };
-    req.session.user_id =  id;
+    req.session.user_id = id;
     res.redirect(`/urls`);
   }
 });
