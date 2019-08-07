@@ -21,7 +21,8 @@ app.set("view engine", "ejs");
 //Object containing short URL, long URL pairs
 const urlDatabase = {
   //Empty at start of application
-  /*
+  /* 
+  Example object:
   "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "userRandomID"}
   */
 };
@@ -30,6 +31,7 @@ const urlDatabase = {
 const users = {
   //Empty at start of application
   /*
+  Example object:
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
@@ -74,7 +76,7 @@ app.get("/login", (req, res) => {
 app.get("/urls", (req, res) => {
   if (!(users[req.session.user_id])) {
     res.statusCode = 401;
-    res.render("401");
+    res.render("401", { message: "You are not logged in." });
   } else {
     const userUrls = urlsForUser(req.session.user_id, urlDatabase);
     let templateVars = { user: users[req.session.user_id], urls: userUrls };
@@ -84,7 +86,7 @@ app.get("/urls", (req, res) => {
 
 //Outputs the database object as a JSON object to the browser
 app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
+  res.json(urlsForUser(req.session.user_id, urlDatabase));
 });
 
 //Renders the page for creating a new short URL
@@ -103,9 +105,12 @@ app.get("/urls/:shortURL", (req, res) => {
     if (urlDatabase[req.params.shortURL].userID === req.session.user_id) {
       let templateVars = { user: users[req.session.user_id], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL };
       res.render("urls_show", templateVars);
+    } else if (!(req.session.user_id)) {
+      res.statusCode = 401;
+      res.render("401", { message: "You are not logged in."});
     } else {
       res.statusCode = 401;
-      res.render("401");
+      res.render("401", { message: "This short URL does not belong to you."});
     }
   } else {
     res.statusCode = 404;
@@ -133,8 +138,8 @@ app.post("/login", (req, res) => {
     req.session.user_id =  user.id;
     res.redirect(`/urls`);
   } else {
-    res.statusCode = 403;
-    res.send('Your email and password did not match anything in our records.');
+    res.statusCode = 401;
+    res.render("401", { message: "Your email and password did not match anything in our records." });
   }
 });
 
@@ -147,11 +152,11 @@ app.post("/logout", (req, res) => {
 //Adds a new user to the list of users with the information they inputted on the register page. If the user already exists, send a 400 status with a message. This also checks if the email or password fields were inputted blank, but that should never be the case as the input fields are defined as required.
 app.post("/register", (req, res) => {
   if (req.body.email === "" || req.body.password === "") {
-    res.statusCode = 400;
-    res.send('Expected input fields were empty');
+    res.statusCode = 401;
+    res.render("401", { message: "Expected input fields were empty." });
   } else if (getUserByEmail(req.body.email, users)) {
-    res.statusCode = 400;
-    res.send('This email is already registered!');
+    res.statusCode = 401;
+    res.render("401", { message: "This email is already registered!" });
   } else {
     const id = generateRandomString();
     const email = req.body.email;
@@ -170,7 +175,7 @@ app.post("/urls", (req, res) => {
     res.redirect(`/urls/${randomString}`);
   } else {
     res.statusCode = 401;
-    res.render("401");
+    res.render("401", { message: "You are not logged in."});
   }
 });
 
@@ -179,20 +184,26 @@ app.post("/urls/:shortURL", (req, res) => {
   if (users[req.session.user_id] && (urlDatabase[req.params.shortURL].userID === req.session.user_id)) {
     urlDatabase[req.params.shortURL].longURL = req.body.newURL;
     res.redirect(`/urls`);
+  } else if (users[req.session.user_id] && !(urlDatabase[req.params.shortURL].userID === req.session.user_id)) {
+    res.statusCode = 401;
+    res.render("401", { message: "This short URL does not belong to you." });
   } else {
     res.statusCode = 401;
-    res.render("401");
+    res.render("401", { message: "You are not logged in." });
   }
 });
 
 //Deletes the short url specified in the URL parameters
 app.post("/urls/:shortURL/delete", (req, res) => {
-  if (req.session.user_id && users[req.session.user_id]) {
+  if (users[req.session.user_id] && (urlDatabase[req.params.shortURL].userID === req.session.user_id)) {
     delete urlDatabase[req.params.shortURL];
     res.redirect(`/urls`);
+  } else if (users[req.session.user_id] && !(urlDatabase[req.params.shortURL].userID === req.session.user_id)) {
+    res.statusCode = 401;
+    res.render("401", { message: "This short URL does not belong to you." });
   } else {
     res.statusCode = 401;
-    res.render("401");
+    res.render("401", { message: "You are not logged in." });
   }
 });
 
