@@ -22,4 +22,11 @@ describe('getUserByEmail', function() {
     const expectedOutput = "userRandomID";
     assert.strictEqual(user, expectedOutput);
   });
+
+  it('should return undefined for an invalid email', function() {
+    //The getUserByEmail function, with the way I coded it, returns the whole user object instead of just the id. Hence why my test here is different than that provided through compass.
+    const user = getUserByEmail("invalid@example.com", testUsers);
+    const expectedOutput = undefined;
+    assert.strictEqual(user, expectedOutput);
+  });
 });
