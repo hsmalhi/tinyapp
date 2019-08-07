@@ -52,21 +52,21 @@ const generateRandomString = function() {
 };
 
 //Returns the user object if a user with that email exists
-const getUserByEmail = function(email) {
-  for (const user in users) {
-    if (users[user].email === email) {
-      return users[user];
+const getUserByEmail = function(email, database) {
+  for (const user in database) {
+    if (database[user].email === email) {
+      return database[user];
     }
   }
   return null;
 };
 
 //Filters the urlDatabase object and returns only the entries for the specified userID
-const urlsForUser = function(userID) {
+const urlsForUser = function(userID, database) {
   let filtered = {};
-  for (const url in urlDatabase) {
-    if (urlDatabase[url].userID === userID) {
-      filtered[url] = urlDatabase[url].longURL;
+  for (const url in database) {
+    if (database[url].userID === userID) {
+      filtered[url] = database[url].longURL;
     }
   }
   return filtered;
@@ -96,7 +96,7 @@ app.get("/login", (req, res) => {
 
 //Renders the homepage which displays the user's short urls, long urls and an edit and delete button for each
 app.get("/urls", (req, res) => {
-  const userUrls = urlsForUser(req.session.user_id);
+  const userUrls = urlsForUser(req.session.user_id, urlDatabase);
   let templateVars = { user: users[req.session.user_id], urls: userUrls };
   res.render("urls_index", templateVars);
 });
@@ -147,7 +147,7 @@ app.get("/u/:shortURL", (req, res) => {
 
 //Logs a user in, sets their user_id cookie and refreshes the page
 app.post("/login", (req, res) => {
-  let user = getUserByEmail(req.body.email);
+  let user = getUserByEmail(req.body.email, users);
   if (user && bcrypt.compareSync(req.body.password, user.password)) {
     req.session.user_id =  user.id;
     res.redirect(`/urls`);
@@ -168,7 +168,7 @@ app.post("/register", (req, res) => {
   if (req.body.email === "" || req.body.password === "") {
     res.statusCode = 400;
     res.send('Expected input fields were empty');
-  } else if (getUserByEmail(req.body.email)) {
+  } else if (getUserByEmail(req.body.email, users)) {
     res.statusCode = 400;
     res.send('This email is already registered!');
   } else {
