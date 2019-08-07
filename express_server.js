@@ -113,7 +113,7 @@ app.get("/u/:shortURL", (req, res) => {
 
 //Logs a user in, sets their user_id cookie and refreshes the page
 app.post("/login", (req, res) => {
-  let user = getUserByEmail(req.body.email, users);
+  let user = users[getUserByEmail(req.body.email, users)];
   if (user && bcrypt.compareSync(req.body.password, user.password)) {
     req.session.user_id =  user.id;
     res.redirect(`/urls`);
