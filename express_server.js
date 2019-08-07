@@ -113,8 +113,13 @@ app.get("/urls/new", (req, res) => {
 //Renders a page with the information about the short URL if it exists and the option to edit the associated long URL. The page is only rendered if that short URL was created by the currently logged in user.
 app.get("/urls/:shortURL", (req, res) => {
   if (urlDatabase[req.params.shortURL]) {
-    let templateVars = { user: users[req.cookies["user_id"]], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL };
-    res.render("urls_show", templateVars);
+    if (urlDatabase[req.params.shortURL].userID === req.cookies["user_id"]) {
+      let templateVars = { user: users[req.cookies["user_id"]], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL };
+      res.render("urls_show", templateVars);
+    } else {
+      res.statusCode = 401;
+      res.send("Unauthorized");
+    }
   } else {
     res.statusCode = 404;
     res.render("404");
@@ -184,7 +189,7 @@ app.post("/urls/:shortURL", (req, res) => {
     res.redirect(`/urls`);
   } else {
     res.statusCode = 401;
-    res.send("Unauthorized")
+    res.send("Unauthorized");
   }
 });
 
@@ -195,11 +200,11 @@ app.post("/urls/:shortURL/delete", (req, res) => {
     res.redirect(`/urls`);
   } else {
     res.statusCode = 401;
-    res.send("Unauthorized")
+    res.send("Unauthorized");
   }
 });
 
 //Express server begins to listen on the specified PORT
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`TinyApp listening on port ${PORT}!`);
 });
