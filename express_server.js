@@ -20,31 +20,18 @@ app.set("view engine", "ejs");
 
 //Object containing short URL, long URL pairs
 const urlDatabase = {
-  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "userRandomID"},
-  "9sm5xK": { longURL: "http://www.google.com", userID: "user2RandomID" }
+  //Empty at start of application
 };
 
 //Object containing user information for registered users
 const users = {
-  "userRandomID": {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "password1"
-  },
-  "user2RandomID": {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "password2"
-  }
+  //Empty at start of application
 };
 
 /****************************************GET METHODS****************************************/
 
 //Redirects the user if they access the root resource based on their login status ("user_id" cookie present or not)
 app.get("/", (req, res) => {
-  //TO DO
-  //If user is logged in, redirect to /urls
-  //Else redirect to /login
   res.redirect(`/urls`);
 });
 
