@@ -21,37 +21,65 @@ app.set("view engine", "ejs");
 //Object containing short URL, long URL pairs
 const urlDatabase = {
   //Empty at start of application
+  /*
+  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "userRandomID"}
+  */
 };
 
 //Object containing user information for registered users
 const users = {
   //Empty at start of application
+  /*
+  "userRandomID": {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "password1"
+  }
+  */
 };
 
 /****************************************GET METHODS****************************************/
 
 //Redirects the user if they access the root resource based on their login status ("user_id" cookie present or not)
 app.get("/", (req, res) => {
-  res.redirect(`/urls`);
+  if (users[req.session.user_id]) {
+    res.redirect(`/urls`);
+  }
+  else {
+    res.redirect(`/login`);
+  }
 });
 
 //Renders the registration page
 app.get("/register", (req, res) => {
-  let templateVars = { user: users[req.session.user_id] };
-  res.render("register", templateVars);
+  if (users[req.session.user_id]) {
+    res.redirect(`/urls`);
+  } else {
+    let templateVars = { user: users[req.session.user_id] };
+    res.render("register", templateVars);
+  }
 });
 
 //Renders the login page
 app.get("/login", (req, res) => {
-  let templateVars = { user: users[req.session.user_id] };
-  res.render("login", templateVars);
+  if (users[req.session.user_id]) {
+    res.redirect(`/urls`);
+  } else {
+    let templateVars = { user: users[req.session.user_id] };
+    res.render("login", templateVars);
+  }
 });
 
 //Renders the homepage which displays the user's short urls, long urls and an edit and delete button for each
 app.get("/urls", (req, res) => {
-  const userUrls = urlsForUser(req.session.user_id, urlDatabase);
-  let templateVars = { user: users[req.session.user_id], urls: userUrls };
-  res.render("urls_index", templateVars);
+  if (!(users[req.session.user_id])) {
+    res.statusCode = 401;
+    res.render("401");
+  } else {
+    const userUrls = urlsForUser(req.session.user_id, urlDatabase);
+    let templateVars = { user: users[req.session.user_id], urls: userUrls };
+    res.render("urls_index", templateVars);
+  }
 });
 
 //Outputs the database object as a JSON object to the browser
@@ -77,7 +105,7 @@ app.get("/urls/:shortURL", (req, res) => {
       res.render("urls_show", templateVars);
     } else {
       res.statusCode = 401;
-      res.send("Unauthorized");
+      res.render("401");
     }
   } else {
     res.statusCode = 404;
@@ -113,7 +141,7 @@ app.post("/login", (req, res) => {
 //Logs a user out, deletes their user_id cookie and refreshes the page
 app.post("/logout", (req, res) => {
   req.session = null;
-  res.redirect(`/urls`);
+  res.redirect(`/`);
 });
 
 //Adds a new user to the list of users with the information they inputted on the register page. If the user already exists, send a 400 status with a message. This also checks if the email or password fields were inputted blank, but that should never be the case as the input fields are defined as required.
@@ -136,19 +164,24 @@ app.post("/register", (req, res) => {
 
 //Adds a new short URL and long URL pair to the url database
 app.post("/urls", (req, res) => {
-  let randomString = generateRandomString();
-  urlDatabase[randomString] = { longURL: req.body.longURL, userID: req.session.user_id };
-  res.redirect(`/urls/${randomString}`);
+  if (users[req.session.user_id]) {
+    let randomString = generateRandomString();
+    urlDatabase[randomString] = { longURL: req.body.longURL, userID: req.session.user_id };
+    res.redirect(`/urls/${randomString}`);
+  } else {
+    res.statusCode = 401;
+    res.render("401");
+  }
 });
 
 //Edits the long url associated with a short url and then redirects to the homepage
 app.post("/urls/:shortURL", (req, res) => {
-  if (req.session.user_id && users[req.session.user_id]) {
+  if (users[req.session.user_id] && (urlDatabase[req.params.shortURL].userID === req.session.user_id)) {
     urlDatabase[req.params.shortURL].longURL = req.body.newURL;
     res.redirect(`/urls`);
   } else {
     res.statusCode = 401;
-    res.send("Unauthorized");
+    res.render("401");
   }
 });
 
@@ -159,7 +192,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
     res.redirect(`/urls`);
   } else {
     res.statusCode = 401;
-    res.send("Unauthorized");
+    res.render("401");
   }
 });
 
