@@ -76,9 +76,9 @@ let visitors = {
 
 /****************************************GET METHODS****************************************/
 
-//Redirects the user if they access the root resource based on their login status ("user_id" cookie present or not)
+//Redirects the user if they access the root resource based on their login status ("userID" cookie present or not)
 app.get("/", (req, res) => {
-  if (users[req.session.user_id]) {
+  if (users[req.session.userID]) {
     res.redirect(`/urls`);
   } else {
     res.redirect(`/login`);
@@ -87,47 +87,47 @@ app.get("/", (req, res) => {
 
 //Renders the registration page
 app.get("/register", (req, res) => {
-  if (users[req.session.user_id]) {
+  if (users[req.session.userID]) {
     res.redirect(`/urls`);
   } else {
-    let templateVars = { user: users[req.session.user_id] };
+    let templateVars = { user: users[req.session.userID] };
     res.render("register", templateVars);
   }
 });
 
 //Renders the login page
 app.get("/login", (req, res) => {
-  if (users[req.session.user_id]) {
+  if (users[req.session.userID]) {
     res.redirect(`/urls`);
   } else {
-    let templateVars = { user: users[req.session.user_id] };
+    let templateVars = { user: users[req.session.userID] };
     res.render("login", templateVars);
   }
 });
 
 //Renders the homepage which displays the user's short urls, long urls and an edit and delete button for each
 app.get("/urls", (req, res) => {
-  if (!(users[req.session.user_id])) {
+  if (!(users[req.session.userID])) {
     res.statusCode = 401;
     res.render("error_page", { statusCode: 401, description:"Unauthorized", message: "You are not logged in." });
   } else {
-    const userUrls = urlsForUser(req.session.user_id, urlDatabase);
-    let templateVars = { user: users[req.session.user_id], urls: userUrls };
+    const userUrls = urlsForUser(req.session.userID, urlDatabase);
+    let templateVars = { user: users[req.session.userID], urls: userUrls };
     res.render("urls_index", templateVars);
   }
 });
 
 //Outputs the database object as a JSON object to the browser
 app.get("/urls.json", (req, res) => {
-  res.json(urlsForUser(req.session.user_id, urlDatabase));
+  res.json(urlsForUser(req.session.userID, urlDatabase));
 });
 
 //Renders the page for creating a new short URL
 app.get("/urls/new", (req, res) => {
-  if (!(users[req.session.user_id])) {
+  if (!(users[req.session.userID])) {
     res.redirect(`/login`);
   } else {
-    let templateVars = { user: users[req.session.user_id] };
+    let templateVars = { user: users[req.session.userID] };
     res.render("urls_new", templateVars);
   }
 });
@@ -138,10 +138,10 @@ app.get("/urls/new", (req, res) => {
 //If the short URL does not exist at all, display a 404 page
 app.get("/urls/:shortURL", (req, res) => {
   if (urlDatabase[req.params.shortURL]) {
-    if (urlDatabase[req.params.shortURL].userID === req.session.user_id) {
-      let templateVars = { user: users[req.session.user_id], shortURL: req.params.shortURL, details: urlDatabase[req.params.shortURL] };
+    if (urlDatabase[req.params.shortURL].userID === req.session.userID) {
+      let templateVars = { user: users[req.session.userID], shortURL: req.params.shortURL, details: urlDatabase[req.params.shortURL] };
       res.render("urls_show", templateVars);
-    } else if (!(req.session.user_id)) {
+    } else if (!(req.session.userID)) {
       res.statusCode = 401;
       res.render("error_page", { statusCode: 401, description:"Unauthorized", message: "You are not logged in." });
     } else {
@@ -189,11 +189,11 @@ app.get("/u/:shortURL", (req, res) => {
 
 /****************************************POST METHODS****************************************/
 
-//Logs a user in, sets their user_id cookie and refreshes the page
+//Logs a user in, sets their userID cookie and refreshes the page
 app.post("/login", (req, res) => {
   let user = users[getUserByEmail(req.body.email, users)];
   if (user && bcrypt.compareSync(req.body.password, user.password)) {
-    req.session.user_id =  user.id;
+    req.session.userID =  user.id;
     res.redirect(`/urls`);
   } else {
     res.statusCode = 401;
@@ -201,7 +201,7 @@ app.post("/login", (req, res) => {
   }
 });
 
-//Logs a user out, deletes their user_id cookie and refreshes the page
+//Logs a user out, deletes their userID cookie and refreshes the page
 app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect(`/`);
@@ -220,18 +220,18 @@ app.post("/register", (req, res) => {
     const email = req.body.email;
     const password = bcrypt.hashSync(req.body.password, 10);
     users[id] = { id, email, password };
-    req.session.user_id = id;
+    req.session.userID = id;
     res.redirect(`/urls`);
   }
 });
 
 //Adds a new short URL and long URL pair to the url database
 app.post("/urls", (req, res) => {
-  if (users[req.session.user_id]) {
+  if (users[req.session.userID]) {
     let randomString = generateRandomString(urlDatabase);
     urlDatabase[randomString] = {
       longURL: req.body.longURL,
-      userID: req.session.user_id,
+      userID: req.session.userID,
       created: moment().subtract(4, 'hours').format("dddd, MMMM Do YYYY, h:mm:ss a"),
       totalVisits: 0,
       uniqueVisits: 0,
@@ -248,10 +248,10 @@ app.post("/urls", (req, res) => {
 
 //Edits the long url associated with a short url and then redirects to the homepage. This is dependent on the user being logged in and also being the owner of that short URL.
 app.put("/urls/:shortURL", (req, res) => {
-  if (users[req.session.user_id] && (urlDatabase[req.params.shortURL].userID === req.session.user_id)) {
+  if (users[req.session.userID] && (urlDatabase[req.params.shortURL].userID === req.session.userID)) {
     urlDatabase[req.params.shortURL].longURL = req.body.newURL;
     res.redirect(`/urls`);
-  } else if (users[req.session.user_id] && !(urlDatabase[req.params.shortURL].userID === req.session.user_id)) {
+  } else if (users[req.session.userID] && !(urlDatabase[req.params.shortURL].userID === req.session.userID)) {
     res.statusCode = 401;
     res.render("error_page", { statusCode: 401, description:"Unauthorized", message: "You are not the owner of this short URL." });
   } else {
@@ -265,10 +265,10 @@ app.put("/urls/:shortURL", (req, res) => {
 
 //Deletes the short url specified in the URL parameters. This is dependent on the user being logged in and also being the owner of that short URL.
 app.delete("/urls/:shortURL", (req, res) => {
-  if (users[req.session.user_id] && (urlDatabase[req.params.shortURL].userID === req.session.user_id)) {
+  if (users[req.session.userID] && (urlDatabase[req.params.shortURL].userID === req.session.userID)) {
     delete urlDatabase[req.params.shortURL];
     res.redirect(`/urls`);
-  } else if (users[req.session.user_id] && !(urlDatabase[req.params.shortURL].userID === req.session.user_id)) {
+  } else if (users[req.session.userID] && !(urlDatabase[req.params.shortURL].userID === req.session.userID)) {
     res.statusCode = 401;
     res.render("error_page", { statusCode: 401, description:"Unauthorized", message: "You are not the owner of this short URL." });
   } else {
