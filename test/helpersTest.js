@@ -4,8 +4,23 @@ const { getUserByEmail, generateRandomString, urlsForUser } = require('../helper
 
 //Object containing short URL, long URL pairs
 const testURLs = {
-  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "userRandomID"},
-  "9sm5xK": { longURL: "http://www.google.com", userID: "user2RandomID" }
+  "b2xVn2": { 
+    longURL: "http://www.lighthouselabs.ca", 
+    userID: "userRandomID",
+    created: "Wednesday, August 7th 2019, 3:25:50 pm",
+    totalVisits: 2,
+    uniqueVisits: 1,
+    visits: [
+      {
+        vistor_id: "visitorRandomID",
+        vistedTime: "Wednesday, August 7th 2019, 3:26:00 pm"
+      },
+      {
+        vistor_id: "visitorRandomID",
+        vistedTime: "Wednesday, August 7th 2019, 3:27:00 pm"
+      }
+    ]
+  } 
 };
 
 //Object containing user information for registered users
@@ -23,8 +38,12 @@ const testUsers = {
 };
 
 describe('generateRandomString', function() {
-  it('should return a string that is 6 characters long', function() {
-    assert.strictEqual(6, generateRandomString().length);
+  it('should return a string that is 6 characters long given the testURLs database', function() {
+    assert.strictEqual(6, generateRandomString(testURLs).length);
+  });
+
+  it('should return a string that is 6 characters long given the testUsers database', function() {
+    assert.strictEqual(6, generateRandomString(testUsers).length);
   });
 });
 
@@ -45,7 +64,25 @@ describe('getUserByEmail', function() {
 describe('urlsForUser', function() {
   it('should return correct urls for a given user', function() {
     const actualOutput = urlsForUser("userRandomID", testURLs);
-    const expectedOutput = { "b2xVn2": "http://www.lighthouselabs.ca" };
+    const expectedOutput = { 
+      "b2xVn2": { 
+        longURL: "http://www.lighthouselabs.ca", 
+        userID: "userRandomID",
+        created: "Wednesday, August 7th 2019, 3:25:50 pm",
+        totalVisits: 2,
+        uniqueVisits: 1,
+        visits: [
+          {
+            vistor_id: "visitorRandomID",
+            vistedTime: "Wednesday, August 7th 2019, 3:26:00 pm"
+          },
+          {
+            vistor_id: "visitorRandomID",
+            vistedTime: "Wednesday, August 7th 2019, 3:27:00 pm"
+          }
+        ]
+      } 
+    };
     assert.deepStrictEqual(actualOutput, expectedOutput);
   });
 

@@ -20,6 +20,7 @@ Screenshot of edit URL page
 - body-parser
 - cookie-session
 - method-override
+- moment
 
 ## Getting Started
 

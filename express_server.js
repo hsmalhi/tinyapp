@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
 const methodOverride = require('method-override');
+const moment = require('moment');
 const { getUserByEmail, generateRandomString, urlsForUser } = require('./helpers');
 
 //Set up express app and required middleware
@@ -28,7 +29,23 @@ const urlDatabase = {
   //Empty at start of application
   /*
   Example object:
-  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "userRandomID"}
+  "b2xVn2": { 
+    longURL: "http://www.lighthouselabs.ca", 
+    userID: "userRandomID",
+    created: "Wednesday, August 7th 2019, 3:25:50 pm",
+    totalVisits: 2,
+    uniqueVisits: 1,
+    visits: [
+      {
+        vistor_id: "visitorRandomID",
+        vistedTime: "Wednesday, August 7th 2019, 3:26:00 pm"
+      },
+      {
+        vistor_id: "visitorRandomID",
+        vistedTime: "Wednesday, August 7th 2019, 3:27:00 pm"
+      }
+    ]
+  }
   */
 };
 
@@ -129,6 +146,7 @@ app.get("/urls/:shortURL", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   if (urlDatabase[req.params.shortURL]) {
     const longURL = urlDatabase[req.params.shortURL].longURL;
+    urlDatabase[req.params.shortURL].totalVisits++;
     res.redirect(longURL);
   } else {
     res.statusCode = 404;
@@ -165,7 +183,7 @@ app.post("/register", (req, res) => {
     res.statusCode = 409;
     res.render("error_page", { statusCode: 409, description:"Conflict", message: "A user with this email already exists." });
   } else {
-    const id = generateRandomString();
+    const id = generateRandomString(users);
     const email = req.body.email;
     const password = bcrypt.hashSync(req.body.password, 10);
     users[id] = { id, email, password };
@@ -177,8 +195,15 @@ app.post("/register", (req, res) => {
 //Adds a new short URL and long URL pair to the url database
 app.post("/urls", (req, res) => {
   if (users[req.session.user_id]) {
-    let randomString = generateRandomString();
-    urlDatabase[randomString] = { longURL: req.body.longURL, userID: req.session.user_id };
+    let randomString = generateRandomString(urlDatabase);
+    urlDatabase[randomString] = { 
+      longURL: req.body.longURL, 
+      userID: req.session.user_id,
+      created: moment().subtract(4, 'hours').format("dddd, MMMM Do YYYY, h:mm:ss a"),
+      totalVisits: 0,
+      uniqueVisits: 0,
+      visits: []
+    };
     res.redirect(`/urls/${randomString}`);
   } else {
     res.statusCode = 401;
