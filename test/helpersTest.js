@@ -4,23 +4,23 @@ const { getUserByEmail, generateRandomString, urlsForUser, alreadyVisited } = re
 
 //Object containing short URL, long URL pairs
 const testURLs = {
-  "b2xVn2": { 
-    longURL: "http://www.lighthouselabs.ca", 
+  "b2xVn2": {
+    longURL: "http://www.lighthouselabs.ca",
     userID: "userRandomID",
     created: "Wednesday, August 7th 2019, 3:25:50 pm",
     totalVisits: 2,
     uniqueVisits: 1,
     visits: [
       {
-        visitor_id: "visitorRandomID",
+        visitorId: "visitorRandomID",
         visitedTime: "Wednesday, August 7th 2019, 3:26:00 pm"
       },
       {
-        visitor_id: "visitorRandomID",
+        visitorId: "visitorRandomID",
         visitedTime: "Wednesday, August 7th 2019, 3:27:00 pm"
       }
     ]
-  } 
+  }
 };
 
 //Object containing user information for registered users
@@ -64,24 +64,24 @@ describe('getUserByEmail', function() {
 describe('urlsForUser', function() {
   it('should return correct urls for a given user', function() {
     const actualOutput = urlsForUser("userRandomID", testURLs);
-    const expectedOutput = { 
-      "b2xVn2": { 
-        longURL: "http://www.lighthouselabs.ca", 
+    const expectedOutput = {
+      "b2xVn2": {
+        longURL: "http://www.lighthouselabs.ca",
         userID: "userRandomID",
         created: "Wednesday, August 7th 2019, 3:25:50 pm",
         totalVisits: 2,
         uniqueVisits: 1,
         visits: [
           {
-            visitor_id: "visitorRandomID",
+            visitorId: "visitorRandomID",
             visitedTime: "Wednesday, August 7th 2019, 3:26:00 pm"
           },
           {
-            visitor_id: "visitorRandomID",
+            visitorId: "visitorRandomID",
             visitedTime: "Wednesday, August 7th 2019, 3:27:00 pm"
           }
         ]
-      } 
+      }
     };
     assert.deepStrictEqual(actualOutput, expectedOutput);
   });

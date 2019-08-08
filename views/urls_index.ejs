@@ -20,6 +20,7 @@
           <th scope="col">Created At</th>
           <th scope="col">Total Visits</th>
           <th scope="col">Unique Visits</th>
+          <th scope="col">Details</th>
           <th scope="col">Edit</th>
           <th scope="col">Delete</th>
         </tr>
@@ -27,15 +28,20 @@
       <tbody>
         <% for(let url in urls) { %>
           <tr>
-            <td><%= url %></td>
+            <td><a href="/u/<%= url %>"><%= url %></a></td>
             <td><%= urls[url].longURL %></td>
             <td><%= urls[url].created %></td>
             <td><%= urls[url].totalVisits %></td>
             <td><%= urls[url].uniqueVisits %></td>
             <td>
-              <form method="GET" action="/urls/<%= url %>">
+                <a href="/urls/<%= url %>">
+                  <button type="submit" class="btn btn-outline-primary">...</button>
+                </a>
+            </td>
+            <td>
+              <a href="/urls/<%= url %>#Edit">
                 <button type="submit" class="btn btn-outline-primary">Edit</button>
-              </form>
+              </a>
             <td>
               <form method="POST" action="/urls/<%= url %>?_method=DELETE">
                 <button type="submit" class="btn btn-outline-danger">Delete</button>

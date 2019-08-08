@@ -36,7 +36,7 @@ const urlsForUser = function(userID, database) {
         totalVisits: database[url].totalVisits,
         uniqueVisits: database[url].uniqueVisits,
         visits: database[url].visits
-      }
+      };
     }
   }
   return filtered;
@@ -46,7 +46,7 @@ const urlsForUser = function(userID, database) {
 const alreadyVisited = function(visitorID, shortURL, database) {
   let visits = database[shortURL].visits;
   for (const visit of visits) {
-    if (visit.visitor_id === visitorID) {
+    if (visit.visitorId === visitorID) {
       return true;
     }
   }

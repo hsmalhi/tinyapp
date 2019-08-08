@@ -32,19 +32,19 @@ const urlDatabase = {
   //Empty at start of application
   /*
   Example object:
-  "b2xVn2": { 
-    longURL: "http://www.lighthouselabs.ca", 
+  "b2xVn2": {
+    longURL: "http://www.lighthouselabs.ca",
     userID: "userRandomID",
     created: "Wednesday, August 7th 2019, 3:25:50 pm",
     totalVisits: 2,
     uniqueVisits: 1,
     visits: [
       {
-        visitor_id: "visitorRandomID",
+        visitorId: "visitorRandomID",
         visitedTime: "Wednesday, August 7th 2019, 3:26:00 pm"
       },
       {
-        visitor_id: "visitorRandomID",
+        visitorId: "visitorRandomID",
         visitedTime: "Wednesday, August 7th 2019, 3:27:00 pm"
       }
     ]
@@ -160,7 +160,7 @@ app.get("/u/:shortURL", (req, res) => {
     const longURL = urlDatabase[req.params.shortURL].longURL;
     let visitorID;
     //If the user has a visitorID cookie and our database contains that same visitorID, continue. If not, then generate a new visitorID, set that as the visitorID cookie and add it to our visitorID database.
-    if (req.cookies["visitorID"] && visitors[req.cookies["visitorID"]]){
+    if (req.cookies["visitorID"] && visitors[req.cookies["visitorID"]]) {
       visitorID = req.cookies["visitorID"];
     } else {
       visitorID = generateRandomString(visitors);
@@ -176,7 +176,7 @@ app.get("/u/:shortURL", (req, res) => {
 
     //Add the visit information to the short url object
     urlDatabase[req.params.shortURL].visits.push({
-      visitor_id: visitorID,
+      visitorId: visitorID,
       visitedTime: moment().subtract(4, 'hours').format("dddd, MMMM Do YYYY, h:mm:ss a")
     });
 
@@ -229,8 +229,8 @@ app.post("/register", (req, res) => {
 app.post("/urls", (req, res) => {
   if (users[req.session.user_id]) {
     let randomString = generateRandomString(urlDatabase);
-    urlDatabase[randomString] = { 
-      longURL: req.body.longURL, 
+    urlDatabase[randomString] = {
+      longURL: req.body.longURL,
       userID: req.session.user_id,
       created: moment().subtract(4, 'hours').format("dddd, MMMM Do YYYY, h:mm:ss a"),
       totalVisits: 0,
