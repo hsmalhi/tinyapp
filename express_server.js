@@ -2,10 +2,14 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
+const methodOverride = require('method-override');
 const { getUserByEmail, generateRandomString, urlsForUser } = require('./helpers');
 
 //Set up express app and required middleware
 const app = express();
+
+// override with POST having ?_method=DELETE
+app.use(methodOverride('_method'));
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({
   name: 'session',
@@ -14,7 +18,9 @@ app.use(cookieSession({
   // Cookie Options
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }));
+
 const PORT = 8080; // default port 8080
+
 app.set("view engine", "ejs");
 
 //Object containing short URL, long URL pairs
@@ -181,7 +187,7 @@ app.post("/urls", (req, res) => {
 });
 
 //Edits the long url associated with a short url and then redirects to the homepage. This is dependent on the user being logged in and also being the owner of that short URL.
-app.post("/urls/:shortURL", (req, res) => {
+app.put("/urls/:shortURL", (req, res) => {
   if (users[req.session.user_id] && (urlDatabase[req.params.shortURL].userID === req.session.user_id)) {
     urlDatabase[req.params.shortURL].longURL = req.body.newURL;
     res.redirect(`/urls`);
@@ -195,7 +201,7 @@ app.post("/urls/:shortURL", (req, res) => {
 });
 
 //Deletes the short url specified in the URL parameters. This is dependent on the user being logged in and also being the owner of that short URL.
-app.post("/urls/:shortURL/delete", (req, res) => {
+app.delete("/urls/:shortURL", (req, res) => {
   if (users[req.session.user_id] && (urlDatabase[req.params.shortURL].userID === req.session.user_id)) {
     delete urlDatabase[req.params.shortURL];
     res.redirect(`/urls`);

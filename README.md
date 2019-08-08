@@ -19,6 +19,7 @@ Screenshot of edit URL page
 - bcrypt
 - body-parser
 - cookie-session
+- method-override
 
 ## Getting Started
 
