@@ -21,6 +21,7 @@ Screenshot of edit URL page
 - cookie-session
 - method-override
 - moment
+- serve-favicon
 
 ## Getting Started
 

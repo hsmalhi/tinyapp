@@ -1,5 +1,7 @@
-const express = require("express");
-const bodyParser = require("body-parser");
+const express = require('express');
+const favicon = require('serve-favicon');
+const path = require('path');
+const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
 const methodOverride = require('method-override');
@@ -8,8 +10,7 @@ const { getUserByEmail, generateRandomString, urlsForUser } = require('./helpers
 
 //Set up express app and required middleware
 const app = express();
-
-// override with POST having ?_method=DELETE
+app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(methodOverride('_method'));
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieSession({
