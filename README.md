@@ -18,6 +18,7 @@ Screenshot of edit URL page
 - EJS
 - bcrypt
 - body-parser
+- cookie-parser
 - cookie-session
 - method-override
 - moment

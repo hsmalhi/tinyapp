@@ -3,16 +3,18 @@ const favicon = require('serve-favicon');
 const path = require('path');
 const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
+const cookieParser = require('cookie-parser');
 const bcrypt = require('bcrypt');
 const methodOverride = require('method-override');
 const moment = require('moment');
-const { getUserByEmail, generateRandomString, urlsForUser } = require('./helpers');
+const { getUserByEmail, generateRandomString, urlsForUser, alreadyVisited } = require('./helpers');
 
 //Set up express app and required middleware
 const app = express();
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(methodOverride('_method'));
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieParser());
 app.use(cookieSession({
   name: 'session',
   secret: 'secret sauce',
@@ -38,12 +40,12 @@ const urlDatabase = {
     uniqueVisits: 1,
     visits: [
       {
-        vistor_id: "visitorRandomID",
-        vistedTime: "Wednesday, August 7th 2019, 3:26:00 pm"
+        visitor_id: "visitorRandomID",
+        visitedTime: "Wednesday, August 7th 2019, 3:26:00 pm"
       },
       {
-        vistor_id: "visitorRandomID",
-        vistedTime: "Wednesday, August 7th 2019, 3:27:00 pm"
+        visitor_id: "visitorRandomID",
+        visitedTime: "Wednesday, August 7th 2019, 3:27:00 pm"
       }
     ]
   }
@@ -60,6 +62,15 @@ const users = {
     email: "user@example.com",
     password: "password1"
   }
+  */
+};
+
+//Contains visitorIDs. This is stored in this object (instead of an array of visitorIDs) so that the generateRandomString function can reference this "database" and generate a unique visitorID.
+let visitors = {
+  //Empty at start of application
+  /*
+  Example key-value pair:
+  "visitorRandomID" : "visitorRandomID"
   */
 };
 
@@ -128,7 +139,7 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   if (urlDatabase[req.params.shortURL]) {
     if (urlDatabase[req.params.shortURL].userID === req.session.user_id) {
-      let templateVars = { user: users[req.session.user_id], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL };
+      let templateVars = { user: users[req.session.user_id], shortURL: req.params.shortURL, details: urlDatabase[req.params.shortURL] };
       res.render("urls_show", templateVars);
     } else if (!(req.session.user_id)) {
       res.statusCode = 401;
@@ -143,11 +154,32 @@ app.get("/urls/:shortURL", (req, res) => {
   }
 });
 
-//Redirects to the long url associated with a short URL, if it exists
+//Redirects to the long url associated with a short URL, if it exists. This route also takes care of counting of total visits and unique visits to this shortURL.
 app.get("/u/:shortURL", (req, res) => {
   if (urlDatabase[req.params.shortURL]) {
     const longURL = urlDatabase[req.params.shortURL].longURL;
+    let visitorID;
+    //If the user has a visitorID cookie and our database contains that same visitorID, continue. If not, then generate a new visitorID, set that as the visitorID cookie and add it to our visitorID database.
+    if (req.cookies["visitorID"] && visitors[req.cookies["visitorID"]]){
+      visitorID = req.cookies["visitorID"];
+    } else {
+      visitorID = generateRandomString(visitors);
+      visitors[visitorID] = visitorID;
+      res.cookie('visitorID', visitorID);
+    }
+
+    //Increment the total visits and only increment the unique visits if this user has not visited the short URL before
     urlDatabase[req.params.shortURL].totalVisits++;
+    if (!alreadyVisited(visitorID, req.params.shortURL, urlDatabase)) {
+      urlDatabase[req.params.shortURL].uniqueVisits++;
+    }
+
+    //Add the visit information to the short url object
+    urlDatabase[req.params.shortURL].visits.push({
+      visitor_id: visitorID,
+      visitedTime: moment().subtract(4, 'hours').format("dddd, MMMM Do YYYY, h:mm:ss a")
+    });
+
     res.redirect(longURL);
   } else {
     res.statusCode = 404;
@@ -212,6 +244,8 @@ app.post("/urls", (req, res) => {
   }
 });
 
+/****************************************PUT METHODS****************************************/
+
 //Edits the long url associated with a short url and then redirects to the homepage. This is dependent on the user being logged in and also being the owner of that short URL.
 app.put("/urls/:shortURL", (req, res) => {
   if (users[req.session.user_id] && (urlDatabase[req.params.shortURL].userID === req.session.user_id)) {
@@ -225,6 +259,9 @@ app.put("/urls/:shortURL", (req, res) => {
     res.render("error_page", { statusCode: 401, description:"Unauthorized", message: "You are not logged in." });
   }
 });
+
+/****************************************DELETE METHODS****************************************/
+
 
 //Deletes the short url specified in the URL parameters. This is dependent on the user being logged in and also being the owner of that short URL.
 app.delete("/urls/:shortURL", (req, res) => {

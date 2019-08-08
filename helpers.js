@@ -42,4 +42,15 @@ const urlsForUser = function(userID, database) {
   return filtered;
 };
 
-module.exports = { getUserByEmail, generateRandomString, urlsForUser };
+//Returns true or false, depending on if the visitor already visited this shortURL
+const alreadyVisited = function(visitorID, shortURL, database) {
+  let visits = database[shortURL].visits;
+  for (const visit of visits) {
+    if (visit.visitor_id === visitorID) {
+      return true;
+    }
+  }
+  return false;
+};
+
+module.exports = { getUserByEmail, generateRandomString, urlsForUser, alreadyVisited };

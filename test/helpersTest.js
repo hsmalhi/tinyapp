@@ -1,6 +1,6 @@
 const { assert } = require('chai');
 
-const { getUserByEmail, generateRandomString, urlsForUser } = require('../helpers.js');
+const { getUserByEmail, generateRandomString, urlsForUser, alreadyVisited } = require('../helpers.js');
 
 //Object containing short URL, long URL pairs
 const testURLs = {
@@ -12,12 +12,12 @@ const testURLs = {
     uniqueVisits: 1,
     visits: [
       {
-        vistor_id: "visitorRandomID",
-        vistedTime: "Wednesday, August 7th 2019, 3:26:00 pm"
+        visitor_id: "visitorRandomID",
+        visitedTime: "Wednesday, August 7th 2019, 3:26:00 pm"
       },
       {
-        vistor_id: "visitorRandomID",
-        vistedTime: "Wednesday, August 7th 2019, 3:27:00 pm"
+        visitor_id: "visitorRandomID",
+        visitedTime: "Wednesday, August 7th 2019, 3:27:00 pm"
       }
     ]
   } 
@@ -73,12 +73,12 @@ describe('urlsForUser', function() {
         uniqueVisits: 1,
         visits: [
           {
-            vistor_id: "visitorRandomID",
-            vistedTime: "Wednesday, August 7th 2019, 3:26:00 pm"
+            visitor_id: "visitorRandomID",
+            visitedTime: "Wednesday, August 7th 2019, 3:26:00 pm"
           },
           {
-            vistor_id: "visitorRandomID",
-            vistedTime: "Wednesday, August 7th 2019, 3:27:00 pm"
+            visitor_id: "visitorRandomID",
+            visitedTime: "Wednesday, August 7th 2019, 3:27:00 pm"
           }
         ]
       } 
@@ -90,5 +90,15 @@ describe('urlsForUser', function() {
     const actualOutput = urlsForUser("invalidID", testURLs);
     const expectedOutput = {};
     assert.deepStrictEqual(actualOutput, expectedOutput);
+  });
+});
+
+describe('alreadyVisited', function() {
+  it('should return a true for a vistor who has visited the shortURL', function() {
+    assert.equal(alreadyVisited("visitorRandomID", "b2xVn2", testURLs), true);
+  });
+
+  it('should return false for a vistor who has not visited the shortURL', function() {
+    assert.equal(alreadyVisited("visitor2RandomID", "b2xVn2", testURLs), false);
   });
 });
